@@ -72,7 +72,7 @@ public class AISystem {
                 case GOALS:
                     if (value.isJsonArray()) {
                         for (JsonElement el : value.getAsJsonArray()) {
-                            BiConsumer<GoalSelector, Mob> consumer = parseGoal(el);
+                            BiConsumer<GoalSelector, Mob> consumer = parseGoal(el, cmd);
                             action = combineConsumer(action, e -> consumer.accept(e.goalSelector, e));
                         }
                     } else {
@@ -83,7 +83,7 @@ public class AISystem {
                 case TARGETS:
                     if (value.isJsonArray()) {
                         for (JsonElement el : value.getAsJsonArray()) {
-                            BiConsumer<GoalSelector, Mob> consumer = parseGoal(el);
+                            BiConsumer<GoalSelector, Mob> consumer = parseGoal(el, cmd);
                             action = combineConsumer(action, e -> consumer.accept(e.targetSelector, e));
                         }
                     } else {
@@ -154,7 +154,8 @@ public class AISystem {
         return entityType.getBaseClass();
     }
 
-    private static BiConsumer<GoalSelector, Mob> parseGoal(JsonElement el) {
+    private static BiConsumer<GoalSelector, Mob> parseGoal(JsonElement el, Cmd cmd) {
+        final String cmdName = cmd.name().toLowerCase();
         if (!el.isJsonObject()) {
             ErrorHandler.error("Invalid goal in 'goals' action! Expected a JSON object.");
             return (s, e) -> {};
