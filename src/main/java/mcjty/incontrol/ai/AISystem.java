@@ -157,7 +157,7 @@ public class AISystem {
     private static BiConsumer<GoalSelector, Mob> parseGoal(JsonElement el, Cmd cmd) {
         final String cmdName = cmd.name().toLowerCase();
         if (!el.isJsonObject()) {
-            ErrorHandler.error("Invalid goal in 'goals' action! Expected a JSON object.");
+            ErrorHandler.error("Invalid goal in AI '"+ cmdName +"' action! Expected a JSON object.");
             return (s, e) -> {};
         }
         JsonObject goal = el.getAsJsonObject();
@@ -175,7 +175,7 @@ public class AISystem {
         int priority = goal.get("priority").getAsInt();
         Goals g = GOALS.get(goalName.toLowerCase());
         if (g == null) {
-            ErrorHandler.error("Invalid goal '" + goalName + "' in 'goals' action!");
+            ErrorHandler.error("Invalid goal '" + goalName + "' in AI '" + cmdName + "' action!");
             return (s, e) -> {};
         }
         switch (g) {
