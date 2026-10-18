@@ -12,6 +12,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nonnull;
@@ -29,12 +30,56 @@ public class AISystem {
     }
 
     enum Goals {
-        LOOK_AT_PLAYER,
-        HURT_BY_TARGET,
-        NEAREST_ATTACKABLE_TARGET,
-        MELEE_ATTACK,
-        RANDOM_LOOK_AROUND,
-        AVOID_ENTITY_GOAL
+        LOOK_AT_PLAYER(
+            new Class[] {
+                LookAtPlayerGoal.class
+            }
+        ),
+        HURT_BY_TARGET(
+            new Class[] {
+                HurtByTargetGoal.class
+            }
+        ),
+        NEAREST_ATTACKABLE_TARGET(
+            new Class[] {
+                NearestAttackableTargetGoal.class
+            }
+        ),
+        RANGED_ATTACK(
+            new Class[] {
+                RangedAttackGoal.class,
+                RangedBowAttackGoal.class,
+                RangedCrossbowAttackGoal.class
+            }
+        ),
+        MELEE_ATTACK(
+            new Class[] {
+                MeleeAttackGoal.class,
+                LeapAtTargetGoal.class,
+                ZombieAttackGoal.class
+            }
+        ),
+        DETONATE(
+            new Class[] {
+                SwellGoal.class
+            }
+        ),
+        RANDOM_LOOK_AROUND(
+            new Class[] {
+                RandomLookAroundGoal.class
+            }
+        ),
+        AVOID_ENTITY_GOAL(
+            new Class[] {
+                AvoidEntityGoal.class
+            }
+        );
+
+        public final Class<? extends Goal>[] removalGoalClasses;
+
+        private Goals(final Class<? extends Goal>[] removalClasses) {
+            removalGoalClasses = removalClasses;
+        }
     }
 
     private static final Map<String, Cmd> ACTIONS = new HashMap<>();
