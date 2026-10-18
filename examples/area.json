@@ -1,0 +1,13 @@
+[
+    {
+        "dimension": "minecraft:overworld",
+        "name": "temple",
+        "type": "box",
+        "x": 0,
+        "y": 60,
+        "z": 0,
+        "dimx": 100,
+        "dimy": 100,
+        "dimz": 100
+    }
+]
