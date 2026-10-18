@@ -160,7 +160,7 @@ public class AISystem {
             ErrorHandler.error("Invalid goal in AI '"+ cmdName +"' action! Expected a JSON object.");
             return (s, e) -> {};
         }
-        JsonObject goal = el.getAsJsonObject();
+        final JsonObject goal = el.getAsJsonObject();
         // If it has the atttributes 'removeall' then we remove all goals in this action
         if (goal.has("removeall")) {
             return (s, e) -> e.goalSelector.removeAllGoals(g -> true);
@@ -217,7 +217,6 @@ public class AISystem {
                 float maxDistance = getDefaultFloat(goal, "maxdistance", 10.0f);
                 double walkSpeedModifier = getDefaultDouble(goal, "walkspeedmodifier", 1.0f);
                 double sprintSpeedModifier = getDefaultDouble(goal, "sprintspeedmodifier", 1.2f);
-                boolean onlyWhenTargeting = getDefaultBoolean(goal, "onlyWhenTargeting", false);
                 return combineConsumer(goalSelector, (s, e) -> {
                     if (e instanceof PathfinderMob pf) {
                         s.addGoal(priority, new AvoidEntityGoal<>(pf, entityClass, maxDistance, walkSpeedModifier, sprintSpeedModifier));
