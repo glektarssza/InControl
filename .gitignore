@@ -59,6 +59,9 @@ src/generated/resources/.cache/
 .metadata/
 *.launch
 
+# VSCode metadata
+.vscode/
+
 # Local machine/config files
 local.properties
 .env
