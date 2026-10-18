@@ -54,8 +54,7 @@ public class AISystem {
     public static Consumer<Mob> parse(String json) {
         Consumer<Mob> action = null;
 
-        JsonParser parser = new JsonParser();
-        JsonElement element = parser.parse(json);
+        JsonElement element = JsonParser.parseString(json);
         if (!element.isJsonObject()) {
             ErrorHandler.error("Invalid ai action! Expected a JSON object.");
             return e -> {};
