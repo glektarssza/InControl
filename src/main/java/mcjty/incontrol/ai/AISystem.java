@@ -20,6 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -224,7 +225,15 @@ public class AISystem {
                     ErrorHandler.error("Invalid goal in AI '" + cmdName + "' action, no goal name or class name provided!");
                     return (s, e) -> {};
                 }
-                int index = Arrays.binarySearch(g.removalGoalClasses, goalName);
+                int index = Arrays.binarySearch(g.removalGoalClasses, goalName, new Comparator<Object>() {
+                    @Override
+                    public int compare(Object o1, Object o2) {
+                        if (o1 instanceof Class<?> clazz && o2 instanceof String clazzName) {
+                            return clazz.getName().compareTo(clazzName);
+                        }
+                        throw new ClassCastException();
+                    }
+                });
                 if (index >= 0) {
                     goalClassName = g.removalGoalClasses[index].getName();
                 }
