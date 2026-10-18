@@ -12,6 +12,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 
@@ -240,7 +241,17 @@ public class AISystem {
                 boolean mustsee = getDefaultBoolean(goal, "mustsee", true);
                 boolean mustreach = getDefaultBoolean(goal, "mustreach", false);
                 int randomInterval = getDefaultInt(goal, "randominterval", 10);
-                return combineConsumer(goalSelector, (s, e) -> s.addGoal(priority, new NearestAttackableTargetGoal(e, Player.class, randomInterval, mustsee, mustreach, null)));
+                return combineConsumer(goalSelector, (s, e) -> s.addGoal(priority, new NearestAttackableTargetGoal<>(e, Player.class, randomInterval, mustsee, mustreach, null)));
+            }
+            case RANGED_ATTACK: {
+                return combineConsumer(goalSelector, (s, e) -> {
+                    double speedModifier = getDefaultDouble(goal, "speedmodifier", 1.0f);
+                    int attackInterval = getDefaultInt(goal, "attackInterval", 20);
+                    float attackRadius = getDefaultFloat(goal, "attackRadius", 15.0F);
+                    if (e instanceof RangedAttackMob ra) {
+                        s.addGoal(priority, new RangedAttackGoal(ra, speedModifier, attackInterval, attackRadius));
+                    }
+                });
             }
             case MELEE_ATTACK: {
                 float speed = getDefaultFloat(goal, "speed", 1.0f);
@@ -248,6 +259,13 @@ public class AISystem {
                 return combineConsumer(goalSelector, (s, e) -> {
                     if (e instanceof PathfinderMob pf) {
                         s.addGoal(priority, new MeleeAttackGoal(pf, speed, followingTargetEvenNotSeen));
+                    }
+                });
+            }
+            case DETONATE: {
+                return combineConsumer(goalSelector, (s, e) -> {
+                    if (e instanceof Creeper c) {
+                        s.addGoal(priority, new SwellGoal(c));
                     }
                 });
             }
