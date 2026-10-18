@@ -137,6 +137,7 @@ public class AISystem {
         return defaultValue;
     }
 
+    private static Class<?> getEntityClass(JsonObject object, String key, Class defaultClass) {
         if (!object.has(key)) {
             return defaultClass;
         }
