@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import mcjty.incontrol.ErrorHandler;
+import mcjty.incontrol.InControl;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -18,10 +19,12 @@ import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class AISystem {
 
@@ -210,6 +213,40 @@ public class AISystem {
         // If it has the atttributes 'removeall' then we remove all goals in this action
         if (goal.has("removeall")) {
             return (s, e) -> e.goalSelector.removeAllGoals(g -> true);
+        }
+        // If it has the atttributes 'remove' then we remove requested goals in this action
+        if (goal.has("remove")) {
+            String goalClassName = getDefaultString(goal, "goalclass", "");
+            if (goalClassName.isBlank()) {
+                String goalName = getDefaultString(goal, "goal", "");
+                Goals g = GOALS.get(goalName.toLowerCase());
+                if (g == null) {
+                    ErrorHandler.error("Invalid goal in AI '" + cmdName + "' action, no goal name or class name provided!");
+                    return (s, e) -> {};
+                }
+                int index = Arrays.binarySearch(g.removalGoalClasses, goalName);
+                if (index >= 0) {
+                    goalClassName = g.removalGoalClasses[index].getName();
+                }
+            }
+            final Class<? extends Goal> goalClass = ((Function<String, Class<? extends Goal>>)(String className) -> {
+                try {
+                    Class<?> clazz = InControl.class.getClassLoader().loadClass(className);
+                    if (!Goal.class.isAssignableFrom(clazz)) {
+                        throw new ClassNotFoundException();
+                    }
+                    return (Class<? extends Goal>)clazz;
+                } catch (ClassNotFoundException _ex) {
+                    return null;
+                }
+            }).apply(goalClassName);
+            if (goalClass == null) {
+                ErrorHandler.error("Invalid goal '" + goalClassName + "' in AI '" + cmdName + "' action, could not load class!");
+                return (s, e) -> {};
+            }
+            return (s, e) -> e.goalSelector.removeAllGoals(gg -> {
+                return goalClass.isInstance(gg);
+            });
         }
         // It has the attributes 'goal' and 'priority'. Then specific attributes for the goal.
         if (!goal.has("goal") || !goal.has("priority")) {
