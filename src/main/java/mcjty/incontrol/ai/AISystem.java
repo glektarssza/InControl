@@ -1,10 +1,10 @@
 package mcjty.incontrol.ai;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import mcjty.incontrol.ErrorHandler;
-import mcjty.incontrol.InControl;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -19,13 +19,14 @@ import net.minecraft.world.entity.player.Player;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class AISystem {
 
@@ -36,56 +37,116 @@ public class AISystem {
 
     enum Goals {
         LOOK_AT_PLAYER(
-            new Class[] {
-                LookAtPlayerGoal.class
+            "net.minecraft.world.entity.ai.goal.LookAtPlayerGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.LookAtPlayerGoal",
+                "net.minecraft.world.entity.ai.goal.InteractGoal",
+                "net.minecraft.world.entity.ai.goal.LookAtTradingPlayerGoal",
+                "net.minecraft.world.entity.animal.Fox.FoxLookAtPlayerGoal",
+                "net.minecraft.world.entity.animal.Panda.PandaLookAtPlayerGoal"
             }
         ),
         HURT_BY_TARGET(
-            new Class[] {
-                HurtByTargetGoal.class
+            "net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal",
+                "net.minecraft.world.entity.animal.horse.Llama.LlamaHurtByTargetGoal",
+                "net.minecraft.world.entity.animal.Bee.BeeHurtByOtherGoal",
+                "net.minecraft.world.entity.animal.Panda.PandaHurtByTargetGoal",
+                "net.minecraft.world.entity.animal.PolarBear.PolarBearHurtByTargetGoal"
             }
         ),
         NEAREST_ATTACKABLE_TARGET(
-            new Class[] {
-                NearestAttackableTargetGoal.class
+            "net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal",
+                "net.minecraft.world.entity.ai.goal.target.NearestAttackableWitchTargetGoal",
+                "net.minecraft.world.entity.animal.Bee.BeeBecomeAngryTargetGoal",
+                "net.minecraft.world.entity.animal.PolarBear.PolarBearAttackPlayersGoal",
+                "net.minecraft.world.entity.monster.EnderMan.EndermanLookForPlayerGoal",
+                "net.minecraft.world.entity.monster.Shulker.ShulkerDefenseAttackGoal",
+                "net.minecraft.world.entity.monster.Spider.SpiderTargetGoal",
+                "net.minecraft.world.entity.monster.Vindicator.VindicatorJohnnyAttackGoal"
             }
         ),
         RANGED_ATTACK(
-            new Class[] {
-                RangedAttackGoal.class,
-                RangedBowAttackGoal.class,
-                RangedCrossbowAttackGoal.class
+            "net.minecraft.world.entity.ai.goal.RangedAttackGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.RangedAttackGoal",
+                "net.minecraft.world.entity.monster.Drowned.DrownedTridentAttackGoal"
+            }
+        ),
+        RANGED_BOW_ATTACK(
+            "net.minecraft.world.entity.ai.goal.RangedBowAttackGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.RangedBowAttackGoal"
+            }
+        ),
+        RANGED_CROSSBOW_ATTACK(
+            "net.minecraft.world.entity.ai.goal.RangedCrossbowAttackGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.RangedCrossbowAttackGoal"
             }
         ),
         MELEE_ATTACK(
-            new Class[] {
-                MeleeAttackGoal.class,
-                LeapAtTargetGoal.class,
-                ZombieAttackGoal.class
+            "net.minecraft.world.entity.ai.goal.MeleeAttackGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.MeleeAttackGoal",
+                "net.minecraft.world.entity.ai.goal.ZombieAttackGoal",
+                "net.minecraft.world.entity.animal.Bee.BeeAttackGoal",
+                "net.minecraft.world.entity.animal.Fox.FoxMeleeAttackGoal",
+                "net.minecraft.world.entity.animal.Panda.PandaAttackGoal",
+                "net.minecraft.world.entity.animal.PolarBear.PolarBearMeleeAttackGoal",
+                "net.minecraft.world.entity.monster.Drowned.DrownedAttackGoal",
+                "net.minecraft.world.entity.monster.Spider.SpiderAttackGoal"
             }
         ),
         DETONATE(
-            new Class[] {
-                SwellGoal.class
+            "net.minecraft.world.entity.ai.goal.SwellGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.SwellGoal"
             }
         ),
         RANDOM_LOOK_AROUND(
-            new Class[] {
-                RandomLookAroundGoal.class
+            "net.minecraft.world.entity.ai.goal.RandomLookAroundGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.RandomLookAroundGoal"
             }
         ),
         AVOID_ENTITY_GOAL(
-            new Class[] {
-                AvoidEntityGoal.class
+            "net.minecraft.world.entity.ai.goal.AvoidEntityGoal",
+            new String[] {
+                "net.minecraft.world.entity.ai.goal.AvoidEntityGoal",
+                "net.minecraft.world.entity.animal.Cat.CatAvoidEntityGoal",
+                "net.minecraft.world.entity.animal.Ocelot.OcelotAvoidEntityGoal",
+                "net.minecraft.world.entity.animal.Panda.PandaAvoidGoal",
+                "net.minecraft.world.entity.animal.Rabbit.RabbitAvoidEntityGoal",
+                "net.minecraft.world.entity.animal.Wolf.WolfAvoidEntityGoal"
             }
         );
 
-        public final Class<? extends Goal>[] removalGoalClasses;
+        /**
+         * The fully qualified name of the "main" goal class.
+         *
+         * This is the class from which any subclasses are derived and is used as
+         * the root class when performing subclass checks in place of the
+         * {@link Goals#knownSubclasses known subclasses list}.
+         */
+        public final String mainClass;
 
-        private Goals(final Class<? extends Goal>[] removalClasses) {
-            removalGoalClasses = removalClasses;
+        /**
+         * A list of known, vanilla subclasses of the
+         * {@link Goals#mainClass "main" goal class}.
+         */
+        public final String[] knownSubclasses;
+
+        private Goals(final String mainClass, final String[] subclasses) {
+            this.mainClass = mainClass;
+            this.knownSubclasses = subclasses;
         }
     }
+
+    private static final Map<String, Class<?>> CLASS_CACHE = new HashMap<>();
 
     private static final Map<String, Cmd> ACTIONS = new HashMap<>();
     static {
@@ -186,6 +247,14 @@ public class AISystem {
         return defaultValue;
     }
 
+    private static List<JsonElement> getDefaultList(JsonObject object, String key, List<JsonElement> defaultValue) {
+        if (object.has(key)) {
+            JsonElement element = object.get(key);
+            return element.getAsJsonArray().asList();
+        }
+        return defaultValue;
+    }
+
     private static Class<?> getEntityClass(JsonObject object, String key, Class defaultClass) {
         if (!object.has(key)) {
             return defaultClass;
@@ -204,6 +273,103 @@ public class AISystem {
         return entityType.getBaseClass();
     }
 
+    @Nonnull
+    private static List<Predicate<Goal>> parseClassRemoveRule(JsonElement el, Cmd cmd) {
+        final String cmdName = cmd.name().toLowerCase();
+        final List<Predicate<Goal>> predicates = new ArrayList<Predicate<Goal>>();
+        if (!el.isJsonObject()) {
+            ErrorHandler.error("Invalid removal rule in AI '"+ cmdName +"' action! Expected a JSON object.");
+            return predicates;
+        }
+        final JsonObject goal = el.getAsJsonObject();
+        final String className = getDefaultString(goal, "name", "");
+        if (className.isBlank()) {
+            ErrorHandler.error("Invalid removal rule in AI '"+ cmdName +"' action! Expected class name to be a non-blank string.");
+            return predicates;
+        }
+        final boolean includeSubclasses = getDefaultBoolean(goal, "includesubclasses", false);
+        if (includeSubclasses) {
+            final Class<?> mainClass = CLASS_CACHE.computeIfAbsent(className, (mainClassName) -> {
+                try {
+                    Class<?> clazz = AISystem.class.getClassLoader().loadClass(mainClassName);
+                    if (!Goal.class.isAssignableFrom(clazz)) {
+                        throw new ClassCastException("Cannot assign class \"net.minecraft.world.entity.ai.goal.Goal\" from class \"" + mainClassName +"\"");
+                    }
+                    return clazz;
+                } catch (ClassNotFoundException _ex) {
+                    return null;
+                } catch (ClassCastException _ex) {
+                    return null;
+                }
+            });
+            predicates.add(gg -> mainClass.isInstance(gg));
+        } else {
+            predicates.add(gg -> gg.getClass().getName().equals(className));
+        }
+        return predicates;
+    }
+
+    @Nonnull
+    private static List<Predicate<Goal>> parseGoalRemoveRule(JsonElement el, Cmd cmd) {
+        final String cmdName = cmd.name().toLowerCase();
+        final List<Predicate<Goal>> predicates = new ArrayList<Predicate<Goal>>();
+        if (!el.isJsonObject()) {
+            ErrorHandler.error("Invalid removal rule in AI '"+ cmdName +"' action! Expected a JSON object.");
+            return predicates;
+        }
+        final JsonObject goal = el.getAsJsonObject();
+        final String goalName = getDefaultString(goal, "name", "");
+        if (goalName.isBlank()) {
+            ErrorHandler.error("Invalid removal rule in AI '"+ cmdName +"' action! Expected goal name to be a non-blank string.");
+            return predicates;
+        }
+        final boolean includeSubclasses = getDefaultBoolean(goal, "includesubclasses", false);
+        Goals g = GOALS.get(goalName.toLowerCase());
+        if (g == null) {
+            ErrorHandler.error("Invalid goal name '" + goalName + "' found while parsing remove rule in AI '" + cmdName + "' action!");
+            return predicates;
+        }
+        if (includeSubclasses) {
+            final Class<?> mainClass = CLASS_CACHE.computeIfAbsent(g.mainClass, (mainClassName) -> {
+                try {
+                    Class<?> clazz = AISystem.class.getClassLoader().loadClass(mainClassName);
+                    if (!Goal.class.isAssignableFrom(clazz)) {
+                        throw new ClassCastException("Cannot assign class \"net.minecraft.world.entity.ai.goal.Goal\" from class \"" + mainClassName +"\"");
+                    }
+                    return clazz;
+                } catch (ClassNotFoundException _ex) {
+                    return null;
+                } catch (ClassCastException _ex) {
+                    return null;
+                }
+            });
+            predicates.add(gg -> mainClass.isInstance(gg));
+        } else {
+            predicates.addAll(Arrays.asList(g.knownSubclasses).parallelStream().<Predicate<Goal>>map((subclass) -> gg -> gg.getClass().getName().equals(subclass)).toList());
+        }
+        return predicates;
+    }
+
+    @Nonnull
+    private static List<Predicate<Goal>> parseRemoveRule(JsonElement el, Cmd cmd) {
+        final String cmdName = cmd.name().toLowerCase();
+        final List<Predicate<Goal>> predicates = new ArrayList<Predicate<Goal>>();
+        if (!el.isJsonObject()) {
+            ErrorHandler.error("Invalid removal rule in AI '"+ cmdName +"' action! Expected a JSON object.");
+            return predicates;
+        }
+        final JsonObject rule = el.getAsJsonObject();
+        if (rule.has("classes") && rule.get("classes").isJsonArray()) {
+            final JsonArray classRuleRuleList = rule.getAsJsonArray("classes");
+            classRuleRuleList.forEach((classRule) -> predicates.addAll(parseClassRemoveRule(classRule, cmd)));
+        }
+        if (rule.has("goals") && rule.get("goals").isJsonArray()) {
+            final JsonArray goalRuleList = rule.getAsJsonArray("goals");
+            goalRuleList.forEach((goalRule) -> predicates.addAll(parseGoalRemoveRule(goalRule, cmd)));
+        }
+        return predicates;
+    }
+
     private static BiConsumer<GoalSelector, Mob> parseGoal(JsonElement el, Cmd cmd) {
         final String cmdName = cmd.name().toLowerCase();
         if (!el.isJsonObject()) {
@@ -217,49 +383,23 @@ public class AISystem {
         }
         // If it has the atttributes 'remove' then we remove requested goals in this action
         if (goal.has("remove")) {
-            String goalClassName = getDefaultString(goal, "goalclass", "");
-            if (goalClassName.isBlank()) {
-                String goalName = getDefaultString(goal, "goal", "");
-                Goals g = GOALS.get(goalName.toLowerCase());
-                if (g == null) {
-                    ErrorHandler.error("Invalid goal in AI '" + cmdName + "' action, no goal name or class name provided!");
+            if (goal.get("remove").isJsonArray()) {
+                final List<Predicate<Goal>> predicates = new ArrayList<>();
+                goal.getAsJsonArray("remove").forEach((removeRule) -> predicates.addAll(parseRemoveRule(removeRule, cmd)));
+                if (predicates.isEmpty()) {
                     return (s, e) -> {};
                 }
-                int index = Arrays.binarySearch(g.removalGoalClasses, goalName, new Comparator<Object>() {
-                    @Override
-                    public int compare(Object o1, Object o2) {
-                        if (o1 instanceof Class<?> clazz && o2 instanceof String clazzName) {
-                            return clazz.getName().compareTo(clazzName);
-                        }
-                        throw new ClassCastException();
-                    }
-                });
-                if (index >= 0) {
-                    goalClassName = g.removalGoalClasses[index].getName();
+                if (predicates.parallelStream().anyMatch((p) -> p == null)) {
+                    return (s, e) -> {};
                 }
+                return (s, e) -> e.goalSelector.removeAllGoals((g) -> predicates.parallelStream().anyMatch((p) -> p.test(g)));
             }
-            final Class<? extends Goal> goalClass = ((Function<String, Class<? extends Goal>>)(String className) -> {
-                try {
-                    Class<?> clazz = InControl.class.getClassLoader().loadClass(className);
-                    if (!Goal.class.isAssignableFrom(clazz)) {
-                        throw new ClassNotFoundException();
-                    }
-                    return (Class<? extends Goal>)clazz;
-                } catch (ClassNotFoundException _ex) {
-                    return null;
-                }
-            }).apply(goalClassName);
-            if (goalClass == null) {
-                ErrorHandler.error("Invalid goal '" + goalClassName + "' in AI '" + cmdName + "' action, could not load class!");
-                return (s, e) -> {};
-            }
-            return (s, e) -> e.goalSelector.removeAllGoals(gg -> {
-                return goalClass.isInstance(gg);
-            });
+            ErrorHandler.error("Invalid remove goal in '" + cmd.name().toLowerCase() + "' action! Expected 'remove' to be an array of conditions.");
+            return (s, e) -> {};
         }
         // It has the attributes 'goal' and 'priority'. Then specific attributes for the goal.
         if (!goal.has("goal") || !goal.has("priority")) {
-            ErrorHandler.error("Invalid goal in 'goals' action! Expected 'goal' and 'priority' attributes.");
+            ErrorHandler.error("Invalid goal in '" + cmd.name().toLowerCase() + "' action! Expected 'goal' and 'priority' attributes.");
             return (s, e) -> {};
         }
         BiConsumer<GoalSelector, Mob> goalSelector = null;
