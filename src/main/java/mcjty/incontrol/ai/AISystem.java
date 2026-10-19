@@ -354,24 +354,17 @@ public class AISystem {
     private static List<Predicate<Goal>> parseRemoveRule(JsonElement el, Cmd cmd) {
         final String cmdName = cmd.name().toLowerCase();
         final List<Predicate<Goal>> predicates = new ArrayList<Predicate<Goal>>();
-        if (!el.isJsonArray()) {
-            ErrorHandler.error("Invalid removal rule list in AI '" + cmdName + "' action! Expected a JSON array.");
+        if (!el.isJsonObject()) {
+            ErrorHandler.error("Invalid removal rule in AI '" + cmdName + "' action! Expected a JSON object.");
             return predicates;
         }
-        final JsonArray rules = el.getAsJsonArray();
-        rules.forEach((rule) -> {
-            if (!rule.isJsonObject()) {
-                ErrorHandler.error("Invalid removal rule in AI '" + cmdName + "' action! Expected a JSON object.");
-                predicates.add(null);
-                return;
-            }
-            if (rule.getAsJsonObject().has("goal")) {
-                predicates.addAll(parseClassRemoveRule(rule, cmd));
-            }
-            if (rule.getAsJsonObject().has("classes")) {
-                predicates.addAll(parseClassRemoveRule(rule, cmd));
-            }
-        });
+        final JsonObject rule = el.getAsJsonObject();
+        if (rule.getAsJsonObject().has("goal")) {
+            predicates.addAll(parseGoalRemoveRule(rule, cmd));
+        }
+        if (rule.getAsJsonObject().has("classes")) {
+            predicates.addAll(parseClassRemoveRule(rule, cmd));
+        }
         return predicates;
     }
 
